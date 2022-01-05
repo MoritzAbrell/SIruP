@@ -34,7 +34,7 @@ def deamon(proto, port):
             print("{} {} Starting TLS SIP deamon on Port {}".format(
                 var.info, var.ts(), var.tls_port))
             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            s = ssl.wrap_socket(s, ssl_version=ssl.PROTOCOL_TLS_SERVER, 
+            s = ssl.wrap_socket(s, ssl_version=ssl.PROTOCOL_TLS, 
                                 keyfile=var.key_path, certfile=var.cert_path)
             s.bind(("0.0.0.0", port))
             s.listen()
@@ -46,7 +46,11 @@ def deamon(proto, port):
 
     while True:
         if proto == "tcp" or proto == "tls":
-            connection, client_address = s.accept()
+            try:
+                connection, client_address = s.accept()
+            except:
+                connection = None
+                pass
             if connection:
                 session = threading.Thread(
                         target=tcp_session,
@@ -70,7 +74,10 @@ def deamon(proto, port):
 def tcp_session(connection, client_address, proto):
     try:
         while True:
-            data = connection.recv(1024)
+            try:
+                data = connection.recv(1024)
+            except:
+                break
             if not data:
                 break
             logger.log(client_address[0])
