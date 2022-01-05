@@ -25,6 +25,10 @@
           </li>
           &nbsp
           <li class="nav-item">
+            <button class="btn btn-outline-dark" data-target="#COUNTRY" data-toggle="collapse" aria-controls="COUNTRY" role="button">Countries</button>
+          </li>
+          &nbsp
+          <li class="nav-item">
             <button class="btn btn-outline-dark" data-target="#METHOD" data-toggle="collapse" aria-controls="METHOD" role="button">Methods</button>
           </li>
           &nbsp
@@ -52,6 +56,7 @@
                 <th scope="col">Total Requests</th>
                 <th scope="col">Runtime in Days</th>
                 <th scope="col">Unique IPs</th>
+                <th scope="col">Unique Countries</th>
                 <th scope="col">Unique User Agents</th>
                 <th scope="col">Unique From Users</th>
                 <th scope="col">Unique To Users</th>
@@ -62,6 +67,7 @@
                 <td>TOTAL_REQ</th>
                 <td>TOTAL_RUNTIME</th>                
                 <td>UN_IP</th>
+                <td>UN_COUNTRY</th>
                 <td>UN_UA</td>
                 <td>UN_FROM</td>
                 <td>UN_TO</td>
@@ -91,6 +97,24 @@
       <div class="row justify-content-md-center">
         <div class="col-auto">
           IP_TABLE
+        </div>
+      </div>
+
+    </div>
+    <div class="collapse ident" id="COUNTRY" data-parent="#groups">
+      <div class="row justify-content-md-center">
+        <div class="col-auto">
+          COUNTRY_BAR
+        </div>
+      </div>
+      <div class="row justify-content-md-center">
+        <div class="col-auto">
+          COUNTRY_PIE
+        </div>
+      </div>
+      <div class="row justify-content-md-center">
+        <div class="col-auto">
+          COUNTRY_TABLE
         </div>
       </div>
     </div>

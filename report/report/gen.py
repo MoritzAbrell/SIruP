@@ -1,5 +1,9 @@
+import re
 import sys
+import time
 import sqlite3
+import requests
+import itertools
 import numpy as np
 import pandas as pd
 import plotly.express as px
@@ -37,7 +41,10 @@ def calc_ua(df):
                    as_index=False).size().sort_values(by=['size'],
                    ascending=False)
     df_c = df
-    df = df.head(5)
+    try:
+        df = df.head(5)
+    except:
+        pass
 
     ua_bar = px.bar(df, x="USER AGENT", y="size", 
                     title="Top 5 User Agents", 
@@ -63,7 +70,10 @@ def calc_from(df):
                    as_index=False).size().sort_values(by=['size'],
                    ascending=False)
     df_c = df
-    df = df.head(10)
+    try:
+        df = df.head(10)
+    except:
+        pass
 
     from_bar = px.bar(df, x="FROM USER", y="size", 
                       title="Top 10 From Users", 
@@ -89,7 +99,10 @@ def calc_to(df):
                    as_index=False).size().sort_values(by=['size'],
                    ascending=False)
     df_c = df
-    df = df.head(10)
+    try:
+        df = df.head(10)
+    except:
+        pass
 
     to_bar = px.bar(df, x="TO USER", y="size", 
                     title="Top 10 To Users", 
@@ -115,7 +128,10 @@ def calc_ip(df):
                    as_index=False).size().sort_values(by=['size'],
                    ascending=False)
     df_c = df
-    df = df.head(10)
+    try:
+        df = df.head(10)
+    except:
+        pass
 
     ip_bar = px.bar(df, x="IP", y="size", 
                     title="Top 10 IPs", 
@@ -128,7 +144,7 @@ def calc_ip(df):
     ip_pie.update_traces(textinfo='percent+label')
     ip_pie = ip_pie.to_html(full_html=False, include_plotlyjs=False)
 
-    ip_table = go.Figure(data=[go.Table(header=dict(values=['Count', 'To']),
+    ip_table = go.Figure(data=[go.Table(header=dict(values=['Count', 'IP']),
                          cells=dict(values=[df_c["size"], df_c["IP"]]))])
     ip_table.update_layout(title="IP Addresses")
     ip_table = ip_table.to_html(full_html=False, include_plotlyjs=False)
@@ -155,11 +171,61 @@ def calc_stats(df):
     return stats_freq, days
 
 
+def calc_countries(countries):
+    df = pd.DataFrame(countries)
+    df = df.groupby(df[0],
+                   as_index=False).size().sort_values(by=['size'],
+                   ascending=False)
+    df_c = df
+    try:
+        df = df.head(10)
+    except:
+        pass
+
+    country_bar = px.bar(df, x=0, y="size", 
+                    title="Top 10 Countries", 
+                    color=0, labels=dict(value="Count", 
+                    variable="Country"))
+    country_bar = country_bar.to_html(full_html=False, include_plotlyjs=False)
+
+    country_pie = px.pie(df, names=0, values="size", 
+                    title="Top 10 Countries")
+    country_pie.update_traces(textinfo='percent+label')
+    country_pie = country_pie.to_html(full_html=False, include_plotlyjs=False)
+
+    country_table = go.Figure(data=[go.Table(header=dict(values=['Count', 'Country']),
+                         cells=dict(values=[df_c["size"], df_c[0]]))])
+    country_table.update_layout(title="Countries")
+    country_table = country_table.to_html(full_html=False, include_plotlyjs=False)
+    
+    return country_bar, country_pie, country_table
+
+
+def country_analysis(un_ip):
+    countries = []
+    i = 1
+    for ip in un_ip:
+        print("\rRequest " + str(i) + " IP of " + str(len(un_ip)), end="", flush=True)
+        i += 1
+        ip = ''.join(ip)
+        r = requests.get('http://ip-api.com/json/'+ip+'?fields=country')
+        try:
+            country = r.json()
+            country = country["country"]
+            countries.append(country)
+        except:
+            continue
+        finally:
+            time.sleep(2)
+    
+    return countries
+
 
 def gen_report(method_bar, method_pie, method_table, ua_bar, ua_pie, ua_table,
                from_bar, from_pie, from_table, to_bar, to_pie, to_table, 
                stats_freq, days, ip_bar, ip_pie, ip_table, total_req, un_ip, 
-               un_ua, un_from, un_to):
+               un_ua, un_from, un_to, countries_bar, countries_pie, 
+               countries_table, un_countries):
     
     with open('./report/template.html','r') as file:
         template = file.read()
@@ -191,10 +257,29 @@ def gen_report(method_bar, method_pie, method_table, ua_bar, ua_pie, ua_table,
     template = template.replace("IP_BAR", ip_bar)
     template = template.replace("IP_PIE", ip_pie)
     template = template.replace("IP_TABLE", ip_table)
+    if countries_bar == False:
+        template = template.replace("COUNTRY_BAR", "N.A.")
+    else:
+        template = template.replace("COUNTRY_BAR", countries_bar)
+        
+    if countries_pie == False:
+        template = template.replace("COUNTRY_PIE", "N.A.")
+    else:
+        template = template.replace("COUNTRY_PIE", countries_pie)
+
+    if countries_table == False:
+        template = template.replace("COUNTRY_TABLE", "N.A.")
+    else:
+        template = template.replace("COUNTRY_TABLE", countries_table)
+
+    if un_countries == False:
+        template = template.replace("UN_COUNTRY", "N.A.")
+    else:
+        template = template.replace("UN_COUNTRY", un_countries)
  
     args = parse_args()
 
-    f = open(args.OUTFILE, "w")
+    f = open((args.OUTFILE + ".html"), "w")
     f.write(template)
     f.close()
 
@@ -210,13 +295,26 @@ def init():
     
     db = args.DATABASE
     conn, cursor = db_conn(db)
-
-    total_req = cursor.execute("SELECT * FROM sip;")
-    total_req = total_req.fetchall()
-    total_req = str(len(total_req))
+    
+    try:
+        total_req = cursor.execute("SELECT * FROM sip;")
+        total_req = total_req.fetchall()
+        total_req = str(len(total_req))
+    except:
+        print("Database is malformed. Try: sqlite3 " + args.DATABASE + " \".recover\" | sqlite3 <new database>")
+        sys.exit(1)
 
     un_ip = cursor.execute("SELECT DISTINCT \"IP\" FROM sip;")
     un_ip = un_ip.fetchall()
+    if args.FULL:
+        countries = country_analysis(un_ip)
+        un_countries = str(len(set(countries)))
+        countries_bar, countries_pie, countries_table = calc_countries(countries)
+    else:
+        countries_bar = False
+        countries_pie = False
+        countries_table = False
+        un_countries = False
     un_ip = str(len(un_ip))
 
     un_ua = cursor.execute("SELECT DISTINCT \"USER AGENT\" FROM sip;")
@@ -232,6 +330,7 @@ def init():
     un_to = str(len(un_to))
 
     df = pd.read_sql_query("SELECT * FROM sip;", conn)
+    df.to_csv ((args.OUTFILE + ".csv"), index = False, header=True)
 
     conn.commit()
     conn.close()
@@ -246,4 +345,5 @@ def init():
     gen_report(method_bar, method_pie, method_table, ua_bar, ua_pie, ua_table,
                from_bar, from_pie, from_table, to_bar, to_pie, to_table, 
                stats_freq, days, ip_bar, ip_pie, ip_table, total_req, un_ip, 
-               un_ua, un_from, un_to)
+               un_ua, un_from, un_to, countries_bar, countries_pie, 
+               countries_table, un_countries)

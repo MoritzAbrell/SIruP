@@ -16,8 +16,15 @@ parser.add_argument(
     '-o',
     dest="OUTFILE",
     type=str,
-    default="report.html",
-    help="Output filename of the HTML report"
+    default="report",
+    help="Output filename of the report. A HTML and CSV file will be generated"
+)
+
+parser.add_argument(
+    '--full',
+    dest="FULL",
+    action='store_true',
+    help="Including country analysis. This may takes a while because of API limits"
 )
 
 
