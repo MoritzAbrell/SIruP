@@ -35,6 +35,26 @@ def calc_methods(df):
     return method_bar, method_pie, method_table
 
 
+def calc_proto(df):
+
+    df = df.groupby(df["PROTOCOL"],
+                   as_index=False).size().sort_values(by=['size'], 
+                   ascending=False)
+
+    proto_bar = px.bar(df, x="PROTOCOL", y="size", 
+                        title="Protocols", 
+                        color="PROTOCOL", labels=dict(value="Count", 
+                        variable="Protocol"))
+    proto_bar = proto_bar.to_html(full_html=False, include_plotlyjs=False)
+
+    proto_pie = px.pie(df, names="PROTOCOL", values="size", 
+                        title="Protocols")
+    proto_pie.update_traces(textinfo='percent+label')
+    proto_pie = proto_pie.to_html(full_html=False, include_plotlyjs=False)
+
+    return proto_bar, proto_pie
+
+
 def calc_ua(df):
     df = df.groupby(df["USER AGENT"],
                    as_index=False).size().sort_values(by=['size'],
@@ -224,7 +244,7 @@ def gen_report(method_bar, method_pie, method_table, ua_bar, ua_pie, ua_table,
                from_bar, from_pie, from_table, to_bar, to_pie, to_table, 
                stats_freq, days, ip_bar, ip_pie, ip_table, total_req, un_ip, 
                un_ua, un_from, un_to, countries_bar, countries_pie, 
-               countries_table, un_countries):
+               countries_table, un_countries, proto_bar, proto_pie):
     
     with open('./report/template.html','r') as file:
         template = file.read()
@@ -236,6 +256,9 @@ def gen_report(method_bar, method_pie, method_table, ua_bar, ua_pie, ua_table,
     template = template.replace("UN_UA", un_ua)
     template = template.replace("UN_FROM", un_from)
     template = template.replace("UN_TO", un_to)
+
+    template = template.replace("PROTO_BAR", proto_bar)
+    template = template.replace("PROTO_PIE", proto_pie)
 
     template = template.replace("UA_BAR", ua_bar)
     template = template.replace("UA_PIE", ua_pie)
@@ -340,9 +363,10 @@ def init():
     to_bar, to_pie, to_table = calc_to(df)
     ip_bar, ip_pie, ip_table = calc_ip(df)
     stats_freq, days = calc_stats(df)
+    proto_bar, proto_pie = calc_proto(df)
 
     gen_report(method_bar, method_pie, method_table, ua_bar, ua_pie, ua_table,
                from_bar, from_pie, from_table, to_bar, to_pie, to_table, 
                stats_freq, days, ip_bar, ip_pie, ip_table, total_req, un_ip, 
                un_ua, un_from, un_to, countries_bar, countries_pie, 
-               countries_table, un_countries)
+               countries_table, un_countries, proto_bar, proto_pie)
