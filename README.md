@@ -1,3 +1,3 @@
 # SIruP - A SIP Honeypot
 
-![SIruP Logo](/docs/sirup-logo.png)
+![SIruP Logo](/doc/sirup-logo.png)
