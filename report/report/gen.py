@@ -183,7 +183,8 @@ def calc_stats(df):
 
 
     stats_freq = go.Figure()
-    stats_freq = stats_freq.add_trace(go.Scatter(x=df.index, y=df["IP"],  mode='lines'))
+    stats_freq = stats_freq.add_trace(go.Scatter(x=df.index, y=df["IP"],  mode='lines',
+                                      fill='tozeroy'))
     stats_freq.update_layout(title="Packets per hour")
     stats_freq = stats_freq.to_html(full_html=False, include_plotlyjs=False)
 
