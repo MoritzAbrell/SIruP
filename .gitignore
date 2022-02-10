@@ -132,3 +132,5 @@ dmypy.json
 report/data.db
 tls.key
 tls.crt
+sirup/__pycache__
+sirup/__pycache__/
