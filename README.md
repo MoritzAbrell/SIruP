@@ -23,5 +23,9 @@ python3 report.py -d <database> -o <outfile> --full
 With the "--full" argument, the IP addresses are resolved by country. 
 Due to the external API queries required for this, this process takes a while depending on the size of the database and the amount of IPs.
 
+## Result
+
+An exemplary HTML report of my own 60 day experiment can be found in the results folder.
+
 
 ... TBC ...
